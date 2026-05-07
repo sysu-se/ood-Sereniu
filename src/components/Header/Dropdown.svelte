@@ -1,5 +1,6 @@
 <script>
 	import game from '@sudoku/game';
+	import { gameStore } from '../../stores/gameStore.js';
 	import { validateSencode } from '@sudoku/sencode';
 	import { modal } from '@sudoku/stores/modal';
 	import { slide, fade } from 'svelte/transition';
@@ -18,7 +19,7 @@
 			button: 'Continue',
 			onHide: game.resume,
 			callback: () => {
-				game.startNew(difficultyValue);
+				gameStore.startFromDifficulty(difficultyValue);
 			},
 		});
 	}
@@ -49,7 +50,7 @@
 			button: 'Start',
 			onHide: game.resume,
 			callback: (value) => {
-				game.startCustom(value);
+				gameStore.startFromSencode(value);
 			},
 			validate: validateSencode
 		});

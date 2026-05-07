@@ -1,49 +1,95 @@
 <script>
 	import { candidates } from '@sudoku/stores/candidates';
-	import { userGrid } from '@sudoku/stores/grid';
 	import { cursor } from '@sudoku/stores/cursor';
 	import { hints } from '@sudoku/stores/hints';
 	import { notes } from '@sudoku/stores/notes';
 	import { settings } from '@sudoku/stores/settings';
 	import { keyboardDisabled } from '@sudoku/stores/keyboard';
 	import { gamePaused } from '@sudoku/stores/game';
+	import { gameStore } from '../../../stores/gameStore.js';
 
 	$: hintsAvailable = $hints > 0;
 
-	function handleHint() {
-		if (hintsAvailable) {
+	$: hintMediumDisabled =
+		!$gameStore.hasGame ||
+		$gamePaused ||
+		!hintsAvailable ||
+		$cursor.x === null ||
+		$cursor.y === null ||
+		$gameStore.clueGrid[$cursor.y][$cursor.x] ||
+		$gameStore.grid[$cursor.y][$cursor.x] !== 0;
+
+	$: hintLightDisabled = !$gameStore.hasGame || $gamePaused || !hintsAvailable;
+
+	function handleHintLight() {
+		if (!hintLightDisabled) {
 			if ($candidates.hasOwnProperty($cursor.x + ',' + $cursor.y)) {
 				candidates.clear($cursor);
 			}
+			gameStore.applyHintLight();
+		}
+	}
 
-			userGrid.applyHint($cursor);
+	function handleHintMedium() {
+		if (!hintMediumDisabled) {
+			if ($candidates.hasOwnProperty($cursor.x + ',' + $cursor.y)) {
+				candidates.clear($cursor);
+			}
+			gameStore.applyHintMedium();
+		}
+	}
+
+	function handleHintDeep() {
+		if (!hintMediumDisabled) {
+			if ($candidates.hasOwnProperty($cursor.x + ',' + $cursor.y)) {
+				candidates.clear($cursor);
+			}
+			gameStore.applyHintDeep();
 		}
 	}
 </script>
 
 <div class="action-buttons space-x-3">
 
-	<button class="btn btn-round" disabled={$gamePaused} title="Undo">
+	<button class="btn btn-round" disabled={$gamePaused || !$gameStore.hasGame || !$gameStore.canUndo} title="Undo" on:click={() => gameStore.undo()}>
 		<svg class="icon-outline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
 		</svg>
 	</button>
 
-	<button class="btn btn-round" disabled={$gamePaused} title="Redo">
+	<button class="btn btn-round" disabled={$gamePaused || !$gameStore.hasGame || !$gameStore.canRedo} title="Redo" on:click={() => gameStore.redo()}>
 		<svg class="icon-outline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10h-10a8 8 90 00-8 8v2M21 10l-6 6m6-6l-6-6" />
 		</svg>
 	</button>
 
-	<button class="btn btn-round btn-badge" disabled={$keyboardDisabled || !hintsAvailable || $userGrid[$cursor.y][$cursor.x] !== 0} on:click={handleHint} title="Hints ({$hints})">
-		<svg class="icon-outline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-		</svg>
-
+	<button class="btn btn-round btn-badge" disabled={hintLightDisabled} on:click={handleHintLight} title="轻提示（定位空格）">
+		<span class="hint-label">轻</span>
 		{#if $settings.hintsLimited}
 			<span class="badge" class:badge-primary={hintsAvailable}>{$hints}</span>
 		{/if}
 	</button>
+
+	<button class="btn btn-round" disabled={hintMediumDisabled || $keyboardDisabled} on:click={handleHintMedium} title="中提示（逻辑或求解填一格）">
+		<span class="hint-label">中</span>
+	</button>
+
+	<button class="btn btn-round" disabled={hintMediumDisabled || $keyboardDisabled} on:click={handleHintDeep} title="深提示（优先完整推理说明）">
+		<span class="hint-label">深</span>
+	</button>
+
+	{#if $gameStore.exploring}
+		<button class="btn btn-round" disabled={$gamePaused || !$gameStore.hasGame} title="提交探索" on:click={() => gameStore.commitExploration()}>
+			<span class="hint-label">提交</span>
+		</button>
+		<button class="btn btn-round" disabled={$gamePaused || !$gameStore.hasGame} title="放弃探索" on:click={() => gameStore.abandonExploration()}>
+			<span class="hint-label">放弃</span>
+		</button>
+	{:else}
+		<button class="btn btn-round" disabled={$gamePaused || !$gameStore.hasGame} title="进入探索模式" on:click={() => gameStore.enterExploration()}>
+			<span class="hint-label">探索</span>
+		</button>
+	{/if}
 
 	<button class="btn btn-round btn-badge" on:click={notes.toggle} title="Notes ({$notes ? 'ON' : 'OFF'})">
 		<svg class="icon-outline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -73,5 +119,9 @@
 
 	.badge-primary {
 		@apply bg-primary;
+	}
+
+	.hint-label {
+		@apply text-sm font-semibold tracking-wide;
 	}
 </style>
