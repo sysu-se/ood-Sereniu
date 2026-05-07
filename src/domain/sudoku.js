@@ -5,7 +5,7 @@ import { SUDOKU_SIZE } from './constants';
 function isValidSet(numbers) {
     const set = new Set(numbers);
     if (set.has(0)) return false;
-    return set.size === 9
+    return set.size === 9;
 }
 
 /**
@@ -20,11 +20,10 @@ class Sudoku {
      * 构造函数
      * @param {number[][]} grid - 初始二维数组
      */
-    constructor(grid, fixed=null) {
+    constructor(grid, fixed = null) {
         this.#grid = this.deepCopy(grid);
         this.#fixed = fixed == null ? this.deepCopy(grid) : this.deepCopy(fixed);
     }
-
 
     /**
      * 落子操作
@@ -57,7 +56,9 @@ class Sudoku {
      * @returns {number[][]} 新数组
      */
     deepCopy(original) {
-        const copy = Array(9).fill().map(() => Array(9).fill(0));
+        const copy = Array(9)
+            .fill()
+            .map(() => Array(9).fill(0));
         for (let i = 0; i < 9; i++) {
             for (let j = 0; j < 9; j++) {
                 copy[i][j] = original[i][j];
@@ -82,7 +83,7 @@ class Sudoku {
     toJSON() {
         return {
             grid: this.deepCopy(this.#grid),
-            fixed: this.deepCopy(this.#fixed)
+            fixed: this.deepCopy(this.#fixed),
         };
     }
 
@@ -91,12 +92,12 @@ class Sudoku {
      * @returns {string}
      */
     toString() {
-        let s = "";
+        let s = '';
         for (let i = 0; i < 9; i++) {
             for (let j = 0; j < 9; j++) {
-                s += (this.#grid[i][j] === 0 ? "·" : this.#grid[i][j]) + " ";
+                s += (this.#grid[i][j] === 0 ? '·' : this.#grid[i][j]) + ' ';
             }
-            s += "\n";
+            s += '\n';
         }
         return s;
     }
@@ -112,13 +113,10 @@ class Sudoku {
     /**
      * 判断是否是固定数字
      */
-    isFixed(row, col){
+    isFixed(row, col) {
         return this.#fixed[row][col];
     }
 
-    /**
-     * 判断当前盘面是否胜利
-     */
     isWon() {
         const grid = this.#grid;
 
@@ -129,7 +127,7 @@ class Sudoku {
 
         // 检查每一列
         for (let c = 0; c < 9; c++) {
-            const col = grid.map(row => row[c]);
+            const col = grid.map((row) => row[c]);
             if (!isValidSet(col)) return false;
         }
 
@@ -244,7 +242,7 @@ class Sudoku {
                             col,
                             value: candidates[0],
                             candidates,
-                            reason: "唯一候选数",
+                            reason: '唯一候选数',
                         };
                     }
                 }
@@ -272,8 +270,10 @@ class Sudoku {
                 }
                 if (isRowOnly) {
                     return {
-                        row, col, value,
-                        reason: `数字 ${value} 在第 ${row+1} 行只能填在这里`
+                        row,
+                        col,
+                        value,
+                        reason: `数字 ${value} 在第 ${row + 1} 行只能填在这里`,
                     };
                 }
 
@@ -287,8 +287,10 @@ class Sudoku {
                 }
                 if (isColOnly) {
                     return {
-                        row, col, value,
-                        reason: `数字 ${value} 在第 ${col+1} 列只能填在这里`
+                        row,
+                        col,
+                        value,
+                        reason: `数字 ${value} 在第 ${col + 1} 列只能填在这里`,
                     };
                 }
 
@@ -309,14 +311,18 @@ class Sudoku {
 
                 if (isBoxOnly) {
                     return {
-                        row, col, value,
-                        reason: `数字 ${value} 在当前 3×3 宫中只能填在这里`
+                        row,
+                        col,
+                        value,
+                        reason: `数字 ${value} 在当前 3×3 宫中只能填在这里`,
                     };
                 }
 
                 return {
-                    row, col, value,
-                    reason: "通过行列宫排除，只有唯一可填数字"
+                    row,
+                    col,
+                    value,
+                    reason: '通过行列宫排除，只有唯一可填数字',
                 };
             }
         }
@@ -343,10 +349,6 @@ class Sudoku {
      * - `light`：只给空格位，不承诺唯一数字（适合「最弱」提示）。
      * - `medium` / `deep`：裸单（唯一候选）；`deep` 带行列宫层面的解释文案。
      * - `auto`（默认）：在存在裸单时，用 {@link getMediumHint} 确定格子与数字，并用 {@link getDeepHint} 合并更细的 `reason`。
-     *
-     * **后续扩展**：当 `getMediumHint()` 与 `getDeepHint()` 均为 null 时，可在此分支依次调用新技巧
-     *（如隐性唯一候选、数对、X-Wing 等），返回统一形状 `{ level, row, col, value?, candidates?, reason }`。
-     *
      * @param {{ level?: 'light'|'medium'|'deep'|'auto' }} [options]
      * @returns {null|{ level: string, row: number, col: number, value?: number, candidates?: number[], reason: string }}
      */
@@ -390,7 +392,6 @@ class Sudoku {
             };
         }
 
-        // auto：裸单存在时，用深度提示润色原因（与 medium 指向同一格序时的首个裸单）
         const medium = this.getMediumHint();
         if (!medium) return null;
         const deep = this.getDeepHint();
@@ -412,9 +413,7 @@ class Sudoku {
     static generate(difficulty = 'easy') {
         const sudokuData = getSudoku(difficulty);
 
-        const grid = sudokuData.map(row =>
-            row.map(val => val === null ? 0 : val)
-        );
+        const grid = sudokuData.map((row) => row.map((val) => (val === null ? 0 : val)));
 
         return new Sudoku(grid);
     }
@@ -427,11 +426,13 @@ class Sudoku {
         const gridStr = this.getGrid().flat().join('');
         const solutionArr = solve(gridStr, {
             outputArray: true,
-            hintCheck: false
+            hintCheck: false,
         });
 
         // 转成 9x9
-        const solvedGrid = Array(SUDOKU_SIZE).fill().map(() => Array(SUDOKU_SIZE).fill(0));
+        const solvedGrid = Array(SUDOKU_SIZE)
+            .fill()
+            .map(() => Array(SUDOKU_SIZE).fill(0));
         for (let i = 0; i < SUDOKU_SIZE * SUDOKU_SIZE; i++) {
             const row = Math.floor(i / SUDOKU_SIZE);
             const col = i % SUDOKU_SIZE;

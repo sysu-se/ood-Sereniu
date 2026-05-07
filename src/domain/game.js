@@ -1,4 +1,4 @@
-import {Sudoku} from "./sudoku";
+import { Sudoku } from './sudoku';
 
 /**
  * 游戏会话类
@@ -53,9 +53,6 @@ class Game {
         }
     }
 
-    /**
-     * 撤销上一步操作
-     */
     undo() {
         if (!this.canUndo()) return;
         // 将当前状态存入重做栈
@@ -64,9 +61,6 @@ class Game {
         this.#current = this.#history.pop();
     }
 
-    /**
-     * 重做上一步撤销的操作
-     */
     redo() {
         if (!this.canRedo()) return;
         // 将当前状态存入历史栈
@@ -98,8 +92,8 @@ class Game {
     toJSON() {
         return {
             sudoku: this.#current.toJSON(),
-            history: this.#history.map(i => i.toJSON()),
-            future: this.#future.map(i => i.toJSON()),
+            history: this.#history.map((i) => i.toJSON()),
+            future: this.#future.map((i) => i.toJSON()),
         };
     }
 
@@ -107,8 +101,8 @@ class Game {
         const data = typeof json === 'string' ? JSON.parse(json) : json;
         const currentSudoku = new Sudoku(data.sudoku.grid, data.sudoku.fixed);
         const game = new Game(currentSudoku);
-        game.#history = data.history.map(h => new Sudoku(h.grid, h.fixed));
-        game.#future = data.future.map(f => new Sudoku(f.grid, f.fixed));
+        game.#history = data.history.map((h) => new Sudoku(h.grid, h.fixed));
+        game.#future = data.future.map((f) => new Sudoku(f.grid, f.fixed));
         return game;
     }
 
@@ -116,8 +110,7 @@ class Game {
         return this.#current.isFixed(row, col);
     }
 
-
-    isWon(){
+    isWon() {
         return this.#current.isWon();
     }
 
@@ -174,7 +167,6 @@ class Game {
         if (!this.#explorationMode) return;
 
         if (commit && this.#explorationGame) {
-            // 与 guess 一致：先把提交前的主局面压栈，再换成探索结果，Undo 才能回到探索前
             const finalSudoku = this.#explorationGame.getSudoku().clone();
             this.#history.push(this.#current.clone());
             this.#current = finalSudoku;
@@ -188,7 +180,6 @@ class Game {
     getExplorationGame() {
         return this.#explorationGame;
     }
-
 }
 
 export { Game };
